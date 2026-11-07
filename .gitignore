@@ -1,0 +1,21 @@
+# Ansible runtime files
+*.retry
+.ansible/
+.vault_pass
+.vault_pass.*
+
+# Generated compliance report
+/reports/compliance_report.json
+
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local logs and operating system files
+*.log
+.DS_Store
+Thumbs.db
+
+task.md

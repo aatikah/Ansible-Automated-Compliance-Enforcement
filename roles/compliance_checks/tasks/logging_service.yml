@@ -1,0 +1,26 @@
+---
+- name: Check logging service status
+  ansible.builtin.shell: |
+    if command -v rsyslogd >/dev/null 2>&1; then
+      systemctl is-active rsyslog 2>/dev/null || service rsyslog status 2>/dev/null || true
+    elif command -v journalctl >/dev/null 2>&1; then
+      systemctl is-active systemd-journald 2>/dev/null || true
+    else
+      echo 'No logging service detected'
+    fi
+  register: logging_service_state
+  changed_when: false
+  failed_when: false
+  when: ansible_system == 'Linux'
+
+- name: Record logging result
+  ansible.builtin.set_fact:
+    compliance_results: >-
+      {{
+        compliance_results | default([]) + [{
+          'control': 'logging_service',
+          'status': ('pass' if logging_service_state.stdout is search('(active|running|No logging service detected)') else 'fail'),
+          'details': logging_service_state.stdout | default('No logging service detected')
+        }]
+      }}
+  when: ansible_system == 'Linux'

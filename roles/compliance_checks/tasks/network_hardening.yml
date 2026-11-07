@@ -1,0 +1,29 @@
+---
+- name: Check IP forwarding setting
+  ansible.builtin.command: sysctl net.ipv4.ip_forward
+  register: ip_forward_status
+  changed_when: false
+  failed_when: false
+  when: ansible_system == 'Linux'
+
+- name: Check ICMP redirect settings
+  ansible.builtin.command: grep -E 'net\.ipv4\.conf\.(all|default)\.send_redirects' /etc/sysctl.conf /etc/sysctl.d/*.conf 2>/dev/null || true
+  register: icmp_redirect_status
+  changed_when: false
+  failed_when: false
+  when: ansible_system == 'Linux'
+
+- name: Record network hardening result
+  ansible.builtin.set_fact:
+    compliance_results: >-
+      {{
+        compliance_results | default([]) + [{
+          'control': 'network_hardening',
+          'status': ('pass' if (ip_forward_status.stdout is match('(?im)^net\.ipv4\.ip_forward\s*=\s*0\s*$') or ip_forward_status.stdout is search('net.ipv4.ip_forward = 0')) and (icmp_redirect_status.stdout is search('send_redirects\s*=\s*0')) else 'fail'),
+          'details': {
+            'ip_forward': ip_forward_status.stdout | default('missing'),
+            'icmp_redirects': icmp_redirect_status.stdout | default('missing')
+          }
+        }]
+      }}
+  when: ansible_system == 'Linux'

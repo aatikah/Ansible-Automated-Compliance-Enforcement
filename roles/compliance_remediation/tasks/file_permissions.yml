@@ -1,0 +1,19 @@
+---
+- name: Set /etc/passwd mode to 0644
+  ansible.builtin.file:
+    path: /etc/passwd
+    mode: '0644'
+  when: ansible_system == 'Linux'
+
+- name: Set /etc/shadow mode to 0600
+  ansible.builtin.file:
+    path: /etc/shadow
+    mode: '0600'
+  when: ansible_system == 'Linux'
+
+- name: Set SSH key file permissions to 0600
+  ansible.builtin.shell: |
+    find /etc/ssh -maxdepth 1 -type f -name '*_key' -exec chmod 0600 {} + 2>/dev/null || true
+  args:
+    executable: /bin/bash
+  when: ansible_system == 'Linux'

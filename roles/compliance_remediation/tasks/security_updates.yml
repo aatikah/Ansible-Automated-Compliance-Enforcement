@@ -1,0 +1,15 @@
+---
+- name: Install available update packages
+  ansible.builtin.shell: |
+    if command -v apt-get >/dev/null 2>&1; then
+      apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get -y upgrade
+    elif command -v dnf >/dev/null 2>&1; then
+      dnf -y update
+    elif command -v yum >/dev/null 2>&1; then
+      yum -y update
+    else
+      echo 'No supported package manager found'
+    fi
+  args:
+    executable: /bin/bash
+  when: ansible_system == 'Linux'

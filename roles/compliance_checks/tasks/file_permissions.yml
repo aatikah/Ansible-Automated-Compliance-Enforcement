@@ -1,0 +1,35 @@
+---
+- name: Check /etc/passwd permissions
+  ansible.builtin.stat:
+    path: /etc/passwd
+  register: passwd_stat
+  when: ansible_system == 'Linux'
+
+- name: Check /etc/shadow permissions
+  ansible.builtin.stat:
+    path: /etc/shadow
+  register: shadow_stat
+  when: ansible_system == 'Linux'
+
+- name: Check SSH private key permissions
+  ansible.builtin.shell: find /etc/ssh -maxdepth 1 -type f -name '*_key' -exec stat -c '%a %n' {} + 2>/dev/null || true
+  register: ssh_key_permissions
+  changed_when: false
+  failed_when: false
+  when: ansible_system == 'Linux'
+
+- name: Record file permissions result
+  ansible.builtin.set_fact:
+    compliance_results: >-
+      {{
+        compliance_results | default([]) + [{
+          'control': 'file_permissions',
+          'status': ('pass' if (passwd_stat.stat.mode | default('0000') == '0644' and shadow_stat.stat.mode | default('0000') == '0600' and (ssh_key_permissions.stdout | regex_findall('(?m)^\d{3,4} ') | length == 0 or (ssh_key_permissions.stdout is search('^600 ') or ssh_key_permissions.stdout | trim == ''))) else 'fail'),
+          'details': {
+            'passwd': passwd_stat.stat.mode | default('missing'),
+            'shadow': shadow_stat.stat.mode | default('missing'),
+            'ssh_keys': ssh_key_permissions.stdout | default('none found')
+          }
+        }]
+      }}
+  when: ansible_system == 'Linux'

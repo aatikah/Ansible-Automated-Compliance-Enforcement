@@ -1,0 +1,14 @@
+---
+- name: Set PermitRootLogin to no
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PermitRootLogin'
+    line: 'PermitRootLogin no'
+    state: present
+  when: ansible_system == 'Linux'
+
+- name: Restart ssh service if needed
+  ansible.builtin.service:
+    name: ssh
+    state: restarted
+  when: ansible_system == 'Linux'

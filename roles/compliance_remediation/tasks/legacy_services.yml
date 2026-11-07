@@ -1,0 +1,11 @@
+---
+- name: Disable legacy service units
+  ansible.builtin.shell: |
+    for svc in telnet rsh rlogin; do
+      if systemctl list-unit-files "$svc.service" >/dev/null 2>&1; then
+        systemctl disable --now "$svc.service" 2>/dev/null || true
+      fi
+    done
+  args:
+    executable: /bin/bash
+  when: ansible_system == 'Linux'

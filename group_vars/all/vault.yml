@@ -1,0 +1,3 @@
+---
+vault_alert_email: security@example.com
+vault_slack_webhook: https://hooks.slack.com/services/example

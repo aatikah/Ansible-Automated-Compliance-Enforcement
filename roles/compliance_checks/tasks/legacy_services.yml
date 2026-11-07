@@ -1,0 +1,22 @@
+---
+- name: Check legacy networking service units
+  ansible.builtin.shell: |
+    for svc in telnet rsh rlogin; do
+      systemctl is-enabled "$svc" 2>/dev/null || true
+    done
+  register: legacy_service_state
+  changed_when: false
+  failed_when: false
+  when: ansible_system == 'Linux'
+
+- name: Record legacy service result
+  ansible.builtin.set_fact:
+    compliance_results: >-
+      {{
+        compliance_results | default([]) + [{
+          'control': 'legacy_services',
+          'status': ('pass' if legacy_service_state.stdout | trim | length == 0 else 'fail'),
+          'details': legacy_service_state.stdout | default('No legacy services found enabled')
+        }]
+      }}
+  when: ansible_system == 'Linux'

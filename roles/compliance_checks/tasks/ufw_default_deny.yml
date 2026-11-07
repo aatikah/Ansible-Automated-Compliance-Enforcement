@@ -1,0 +1,19 @@
+---
+- name: Check UFW default incoming policy
+  ansible.builtin.command: ufw status verbose
+  register: ufw_status_check
+  changed_when: false
+  failed_when: false
+  when: ansible_system == 'Linux'
+
+- name: Record UFW result
+  ansible.builtin.set_fact:
+    compliance_results: >-
+      {{
+        compliance_results | default([]) + [{
+          'control': 'ufw_default_deny',
+          'status': ('pass' if ufw_status_check.stdout is search('Default: deny \(incoming\)') else 'fail'),
+          'details': ufw_status_check.stdout | default('UFW status unavailable')
+        }]
+      }}
+  when: ansible_system == 'Linux'

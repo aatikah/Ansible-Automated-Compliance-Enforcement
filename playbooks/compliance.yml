@@ -1,0 +1,60 @@
+---
+- name: Collect compliance configuration and audit hosts
+  hosts: all
+  become: true
+  gather_facts: true
+  vars_files:
+    - ../group_vars/all.yml
+    - ../group_vars/all/vault.yml
+
+  pre_tasks:
+    - name: Initialize compliance results
+      ansible.builtin.set_fact:
+        compliance_results: []
+
+  roles:
+    - role: compliance_checks
+      when: not (compliance_remediate | default(false))
+
+    - role: compliance_remediation
+      when: compliance_remediate | default(false)
+
+  post_tasks:
+    - name: Capture host compliance status
+      ansible.builtin.set_fact:
+        host_compliance_status:
+          host: "{{ inventory_hostname }}"
+          result: "{{ compliance_results | default([]) }}"
+
+- name: Generate report from collected results
+  hosts: localhost
+  gather_facts: true
+  vars_files:
+    - ../group_vars/all.yml
+    - ../group_vars/all/vault.yml
+
+  tasks:
+    - name: Ensure report directory exists
+      ansible.builtin.file:
+        path: "{{ report_directory }}"
+        state: directory
+        mode: '0755'
+      run_once: true
+
+    - name: Aggregate host results
+      ansible.builtin.set_fact:
+        compliance_report_data: >-
+          {{
+            compliance_report_data | default([]) + [{
+              'host': item,
+              'controls': hostvars[item].compliance_results | default([])
+            }]
+          }}
+      loop: "{{ groups['all'] | default([]) }}"
+      run_once: true
+
+    - name: Write compliance report to JSON
+      ansible.builtin.copy:
+        content: "{{ {'generated_at': ansible_date_time.iso8601, 'hosts': compliance_report_data | default([])} | to_nice_json }}"
+        dest: "{{ report_directory }}/compliance_report.json"
+      run_once: true

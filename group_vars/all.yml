@@ -1,0 +1,20 @@
+---
+compliance_remediate: false
+report_directory: "{{ playbook_dir }}/../reports"
+ssh_root_login: "no"
+ssh_password_auth: "no"
+ssh_max_auth_tries: 4
+ufw_default_incoming_policy: deny
+logging_target: "rsyslog"
+authorized_sudo_users:
+  - admin
+  - ops
+
+# Example: disable all nonessential legacy services on targets.
+legacy_services:
+  - telnet
+  - rsh
+  - rlogin
+
+# Example variables for notification integrations.
+alert_email: "{{ vault_alert_email | default('security@example.com') }}"

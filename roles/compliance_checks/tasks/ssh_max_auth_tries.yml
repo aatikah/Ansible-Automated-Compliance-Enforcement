@@ -1,0 +1,19 @@
+---
+- name: Check SSH MaxAuthTries config
+  ansible.builtin.command: grep -E '^MaxAuthTries' /etc/ssh/sshd_config
+  register: ssh_max_auth_tries_check
+  changed_when: false
+  failed_when: false
+  when: ansible_system == 'Linux'
+
+- name: Record MaxAuthTries result
+  ansible.builtin.set_fact:
+    compliance_results: >-
+      {{
+        compliance_results | default([]) + [{
+          'control': 'ssh_max_auth_tries',
+          'status': ('pass' if ssh_max_auth_tries_check.stdout is match('(?im)^MaxAuthTries\\s+(?:[1-4])\\s*$') else 'fail'),
+          'details': ssh_max_auth_tries_check.stdout | default('MaxAuthTries not set')
+        }]
+      }}
+  when: ansible_system == 'Linux'

@@ -1,0 +1,23 @@
+---
+- name: Lock accounts with empty passwords
+  ansible.builtin.shell: |
+    for user in $(awk -F: '($2 == "") {print $1}' /etc/shadow 2>/dev/null); do
+      passwd -l "$user"
+    done
+  args:
+    executable: /bin/bash
+  when: ansible_system == 'Linux'
+
+- name: Remove unauthorized sudo privileges
+  ansible.builtin.shell: |
+    for sudoer in /etc/sudoers.d/*; do
+      [ -f "$sudoer" ] || continue
+      for user in $(grep -E '^[A-Za-z0-9_.-]+\s+ALL=' "$sudoer" 2>/dev/null | awk '{print $1}' || true); do
+        if ! printf '%s\n' {{ authorized_sudo_users | default([]) | join(' ') }} | grep -qx "$user"; then
+          rm -f "$sudoer"
+        fi
+      done
+    done
+  args:
+    executable: /bin/bash
+  when: ansible_system == 'Linux'

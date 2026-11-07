@@ -1,0 +1,19 @@
+---
+- name: Check SSH root login config
+  ansible.builtin.command: grep -E '^PermitRootLogin' /etc/ssh/sshd_config
+  register: ssh_root_login_check
+  changed_when: false
+  failed_when: false
+  when: ansible_system == 'Linux'
+
+- name: Record SSH root login result
+  ansible.builtin.set_fact:
+    compliance_results: >-
+      {{
+        compliance_results | default([]) + [{
+          'control': 'ssh_root_login',
+          'status': ('pass' if ssh_root_login_check.stdout is match('(?im)^PermitRootLogin\\s+no\\s*$') else 'fail'),
+          'details': ssh_root_login_check.stdout | default('PermitRootLogin not set')
+        }]
+      }}
+  when: ansible_system == 'Linux'

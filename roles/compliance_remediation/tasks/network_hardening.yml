@@ -1,0 +1,15 @@
+---
+- name: Configure sysctl rules for network hardening
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/99-compliance.conf
+    mode: '0644'
+    content: |
+      net.ipv4.ip_forward = 0
+      net.ipv4.conf.all.send_redirects = 0
+      net.ipv4.conf.default.send_redirects = 0
+  when: ansible_system == 'Linux'
+
+- name: Apply sysctl network settings
+  ansible.builtin.command: sysctl --system
+  changed_when: true
+  when: ansible_system == 'Linux'

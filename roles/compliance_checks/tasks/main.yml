@@ -1,0 +1,33 @@
+---
+- name: Check SSH root login setting
+  ansible.builtin.include_tasks: ssh_root_login.yml
+
+- name: Check SSH password authentication setting
+  ansible.builtin.include_tasks: ssh_password_auth.yml
+
+- name: Check SSH MaxAuthTries setting
+  ansible.builtin.include_tasks: ssh_max_auth_tries.yml
+
+- name: Check UFW default incoming policy
+  ansible.builtin.include_tasks: ufw_default_deny.yml
+
+- name: Check for empty-password accounts
+  ansible.builtin.include_tasks: empty_passwords.yml
+
+- name: Check unauthorized sudo access
+  ansible.builtin.include_tasks: unauthorized_sudo_users.yml
+
+- name: Check file permissions on sensitive files
+  ansible.builtin.include_tasks: file_permissions.yml
+
+- name: Check legacy services are disabled
+  ansible.builtin.include_tasks: legacy_services.yml
+
+- name: Check for pending security updates
+  ansible.builtin.include_tasks: security_updates.yml
+
+- name: Check logging service status
+  ansible.builtin.include_tasks: logging_service.yml
+
+- name: Check network hardening settings
+  ansible.builtin.include_tasks: network_hardening.yml

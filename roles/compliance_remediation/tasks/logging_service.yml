@@ -1,0 +1,13 @@
+---
+- name: Install rsyslog if missing
+  ansible.builtin.package:
+    name: rsyslog
+    state: present
+  when: ansible_system == 'Linux'
+
+- name: Enable and start rsyslog
+  ansible.builtin.service:
+    name: rsyslog
+    state: started
+    enabled: true
+  when: ansible_system == 'Linux'

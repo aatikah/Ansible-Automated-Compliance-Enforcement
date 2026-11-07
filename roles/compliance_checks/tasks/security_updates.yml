@@ -1,0 +1,28 @@
+---
+- name: Check for pending security updates
+  ansible.builtin.shell: |
+    if command -v apt-get >/dev/null 2>&1; then
+      apt-get -s upgrade 2>/dev/null | grep -E '^(Inst|Conf)' || true
+    elif command -v yum >/dev/null 2>&1; then
+      yum -q check-update 2>/dev/null || true
+    elif command -v dnf >/dev/null 2>&1; then
+      dnf -q check-update 2>/dev/null || true
+    else
+      echo 'No package manager detected'
+    fi
+  register: pending_security_updates
+  changed_when: false
+  failed_when: false
+  when: ansible_system == 'Linux'
+
+- name: Record security update result
+  ansible.builtin.set_fact:
+    compliance_results: >-
+      {{
+        compliance_results | default([]) + [{
+          'control': 'security_updates',
+          'status': ('pass' if pending_security_updates.stdout | trim | length == 0 or pending_security_updates.stdout is search('No package manager detected') else 'fail'),
+          'details': pending_security_updates.stdout | default('No package manager detected')
+        }]
+      }}
+  when: ansible_system == 'Linux'

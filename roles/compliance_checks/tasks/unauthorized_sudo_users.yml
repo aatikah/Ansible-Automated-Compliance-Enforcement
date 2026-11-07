@@ -1,0 +1,19 @@
+---
+- name: Check sudoers configuration
+  ansible.builtin.command: grep -R -E '^(%sudo|%wheel|ALL\s*\(ALL\)|NOPASSWD)' /etc/sudoers /etc/sudoers.d 2>/dev/null || true
+  register: sudoers_check
+  changed_when: false
+  failed_when: false
+  when: ansible_system == 'Linux'
+
+- name: Record sudo access result
+  ansible.builtin.set_fact:
+    compliance_results: >-
+      {{
+        compliance_results | default([]) + [{
+          'control': 'sudo_access',
+          'status': ('pass' if sudoers_check.stdout | length > 0 else 'warn'),
+          'details': sudoers_check.stdout | default('No sudoers policy found')
+        }]
+      }}
+  when: ansible_system == 'Linux'

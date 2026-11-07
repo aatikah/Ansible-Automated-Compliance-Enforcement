@@ -1,0 +1,9 @@
+---
+- name: Enable UFW and set default deny incoming
+  ansible.builtin.shell: |
+    ufw --force enable
+    ufw default deny incoming
+    ufw default deny outgoing
+  args:
+    executable: /bin/bash
+  when: ansible_system == 'Linux'

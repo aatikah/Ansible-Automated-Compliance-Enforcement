@@ -1,0 +1,30 @@
+---
+- name: Remediate SSH root login settings
+  ansible.builtin.include_tasks: ssh_root_login.yml
+
+- name: Remediate SSH password authentication settings
+  ansible.builtin.include_tasks: ssh_password_auth.yml
+
+- name: Remediate SSH MaxAuthTries
+  ansible.builtin.include_tasks: ssh_max_auth_tries.yml
+
+- name: Remediate UFW default incoming policy
+  ansible.builtin.include_tasks: ufw_hardening.yml
+
+- name: Remediate empty-password and sudo access issues
+  ansible.builtin.include_tasks: user_hardening.yml
+
+- name: Fix sensitive file permissions
+  ansible.builtin.include_tasks: file_permissions.yml
+
+- name: Disable legacy services
+  ansible.builtin.include_tasks: legacy_services.yml
+
+- name: Install security updates
+  ansible.builtin.include_tasks: security_updates.yml
+
+- name: Ensure logging service is enabled
+  ansible.builtin.include_tasks: logging_service.yml
+
+- name: Set network hardening values
+  ansible.builtin.include_tasks: network_hardening.yml
